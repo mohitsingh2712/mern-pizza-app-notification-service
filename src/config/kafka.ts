@@ -1,5 +1,9 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Consumer, EachMessagePayload, Kafka } from "kafkajs";
 import { MessageBroker } from "../types/broker";
+import { createNotificaionTransport } from "../factories/notification-factory";
+import { handleOrderHtml, handleOrderText } from "../handlers/orderHandler";
+import config from "config";
 
 export class KafkaBroker implements MessageBroker {
   private consumer: Consumer;
@@ -34,11 +38,16 @@ export class KafkaBroker implements MessageBroker {
         message,
       }: EachMessagePayload) => {
         // Logic to handle incoming messages.
-        console.log({
-          value: message.value.toString(),
-          topic,
-          partition,
-        });
+        if (topic === "billing") {
+          const transport = createNotificaionTransport("mail");
+          const order = JSON.parse(message.value.toString());
+          await transport.send({
+            to: order.data.customerId.email || config.get("mail.from"),
+            subject: "Order update.",
+            text: handleOrderText(order),
+            html: handleOrderHtml(order),
+          });
+        }
       },
     });
   }
