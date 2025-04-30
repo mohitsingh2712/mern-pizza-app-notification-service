@@ -9,7 +9,7 @@ export class MailTransport implements NotificationTransport {
       port: config.get("mail.port"),
       secure: false,
       auth: {
-        user: config.get("mail.user"),
+        user: config.get("mail.username"),
         pass: config.get("mail.password"),
       },
     });
